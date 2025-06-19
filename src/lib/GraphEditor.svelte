@@ -74,6 +74,8 @@
     width: number;
     color: string;
     customAttrs?: CustomAttrs;
+    // Curve control point (null means straight line)
+    controlPoint: { x: number, y: number } | null;
   };
 
   let circles = $state<Circle[]>([]);
@@ -85,6 +87,7 @@
 
   // Currently active drag state
   let dragCircleId: number | null = $state(null);
+  let dragEdgeId: number | null = $state(null); // For dragging edge control points
   let isCreatingEdge = $state(false);
   let startCircleId: number | null = $state(null);
   let tempX = $state(0);
@@ -159,11 +162,64 @@
     }
   }
 
+  function pointerDownOnEdge(event: PointerEvent, edgeId: number) {
+    event.stopPropagation();
+    
+    if (mode !== 'draw') {
+      // In customize mode we don't drag/create, just allow click handler to select
+      return;
+    }
+    
+    const isCtrlOrCmd = event.ctrlKey || event.metaKey;
+    
+    if (isCtrlOrCmd) {
+      // Start control point drag
+      dragEdgeId = edgeId;
+      const svg = (event.currentTarget as SVGGraphicsElement).ownerSVGElement;
+      svg?.setPointerCapture(event.pointerId);
+      
+      // Find the edge
+      const edge = edges.find(e => e.id === edgeId);
+      if (edge) {
+        // Initialize control point if it doesn't exist
+        if (!edge.controlPoint) {
+          // Calculate midpoint between the two circles
+          const fromCircle = circles.find(c => c.id === edge.from);
+          const toCircle = circles.find(c => c.id === edge.to);
+          
+          if (fromCircle && toCircle) {
+            const midX = (fromCircle.x + toCircle.x) / 2;
+            const midY = (fromCircle.y + toCircle.y) / 2;
+            
+            // Offset the control point perpendicular to the line
+            const dx = toCircle.x - fromCircle.x;
+            const dy = toCircle.y - fromCircle.y;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            const normalX = -dy / len * 50; // 50px perpendicular offset
+            const normalY = dx / len * 50;
+            
+            // Update the edge
+            edges = edges.map(e => 
+              e.id === edgeId 
+                ? { ...e, controlPoint: { x: midX + normalX, y: midY + normalY } }
+                : e
+            );
+          }
+        }
+      }
+    }
+  }
+
   function pointerMove(event: PointerEvent) {
     if (mode !== 'draw') return;
     if (dragCircleId !== null) {
       circles = circles.map((c) =>
         c.id === dragCircleId ? { ...c, x: event.offsetX, y: event.offsetY } : c
+      );
+    } else if (dragEdgeId !== null) {
+      // Update control point position for the edge
+      edges = edges.map((e) =>
+        e.id === dragEdgeId ? { ...e, controlPoint: { x: event.offsetX, y: event.offsetY } } : e
       );
     } else if (isCreatingEdge && startCircleId !== null) {
       tempX = event.offsetX;
@@ -178,6 +234,11 @@
 
     if (dragCircleId !== null) {
       dragCircleId = null;
+      return;
+    }
+    
+    if (dragEdgeId !== null) {
+      dragEdgeId = null;
       return;
     }
 
@@ -199,7 +260,8 @@
         from: startCircleId,
         to: newCircle.id,
         width: edgeWidth,
-        color: '#000'
+        color: '#000',
+        controlPoint: null
       };
       edges = [...edges, newEdge];
 
@@ -445,16 +507,44 @@
 
     <!-- edges -->
     {#each edges as e (e.id)}
-      <line
-        x1={circles.find((c) => c.id === e.from)?.x}
-        y1={circles.find((c) => c.id === e.from)?.y}
-        x2={circles.find((c) => c.id === e.to)?.x}
-        y2={circles.find((c) => c.id === e.to)?.y}
-        stroke={e.color}
-        stroke-width={e.width}
-        onclick={() => selectEdge(e.id)}
-        {...(e.customAttrs ?? {})}
-      />
+      {#if e.controlPoint}
+        <!-- Curved line with control point -->
+        <path
+          d="M {circles.find((c) => c.id === e.from)?.x} {circles.find((c) => c.id === e.from)?.y} 
+             Q {e.controlPoint.x} {e.controlPoint.y} 
+               {circles.find((c) => c.id === e.to)?.x} {circles.find((c) => c.id === e.to)?.y}"
+          fill="none"
+          stroke={e.color}
+          stroke-width={e.width}
+          onclick={() => selectEdge(e.id)}
+          onpointerdown={(event) => pointerDownOnEdge(event, e.id)}
+          {...(e.customAttrs ?? {})}
+        />
+        <!-- Show control point when in customize mode -->
+        {#if mode === 'customize' && selectedEdgeId === e.id}
+          <circle
+            cx={e.controlPoint.x}
+            cy={e.controlPoint.y}
+            r="5"
+            fill="#ff0"
+            stroke="#000"
+            stroke-width="1"
+          />
+        {/if}
+      {:else}
+        <!-- Straight line -->
+        <line
+          x1={circles.find((c) => c.id === e.from)?.x}
+          y1={circles.find((c) => c.id === e.from)?.y}
+          x2={circles.find((c) => c.id === e.to)?.x}
+          y2={circles.find((c) => c.id === e.to)?.y}
+          stroke={e.color}
+          stroke-width={e.width}
+          onclick={() => selectEdge(e.id)}
+          onpointerdown={(event) => pointerDownOnEdge(event, e.id)}
+          {...(e.customAttrs ?? {})}
+        />
+      {/if}
     {/each}
 
     <!-- temp edge while creating -->
