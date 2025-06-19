@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Toolbar from './Toolbar.svelte';
+
   import { tick } from 'svelte';
 
   /* ---------------------
@@ -28,6 +30,26 @@
   let backgroundImage = $state<string | null>(null);
   let fileInput: HTMLInputElement;
   let exportWithBackground = $state(false);
+  let containerRef: HTMLDivElement;
+  
+  // Max visible dimensions (80% of viewport)
+  let maxVisibleWidth = $state(0);
+  let maxVisibleHeight = $state(0);
+
+  // Update max dimensions on mount and window resize
+  $effect(() => {
+    function updateMaxDimensions() {
+      maxVisibleWidth = window.innerWidth * 0.8;
+      maxVisibleHeight = window.innerHeight * 1;
+    }
+    
+    updateMaxDimensions();
+    window.addEventListener('resize', updateMaxDimensions);
+    
+    return () => {
+      window.removeEventListener('resize', updateMaxDimensions);
+    };
+  });
 
   /* ---------------------
    * Internal state
@@ -352,10 +374,12 @@
     position: relative;
     background: white;
     border: 1px solid #ccc;
-    overflow: hidden;
+    overflow: auto;
+    max-width: 80vw;
+    max-height: 80vh;
   }
   .toolbar {
-    position: absolute;
+    position: sticky;
     top: 8px;
     left: 8px;
     background: rgba(255, 255, 255, 0.9);
@@ -365,22 +389,44 @@
     display: flex;
     gap: 4px;
     z-index: 10;
+    margin-bottom: 8px;
+  }
+  .sidepanel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 260px;
+    height: 100%;
+    background: #f9f9f9;
+    border-left: 1px solid #ccc;
+    padding: 8px;
+    overflow: auto;
+    z-index: 20;
   }
 </style>
 
-<div class="container" style="width:{width}px;height:{height}px">
+<Toolbar 
+  width={width}
+  height={height}
+  circleDiameter={circleDiameter}
+  edgeWidth={edgeWidth}
+  mode={mode}
+  exportWithBackground={exportWithBackground}
+  on:update={(e) => {
+    const { property, value } = e.detail;
+    if (property === 'width') width = value;
+    else if (property === 'height') height = value;
+    else if (property === 'circleDiameter') circleDiameter = value;
+    else if (property === 'edgeWidth') edgeWidth = value;
+    else if (property === 'exportWithBackground') exportWithBackground = value;
+  }}
+  on:addRoot={addRootCircle}
+  on:export={exportSVG}
+  on:toggleMode={toggleMode}
+  on:uploadBg={triggerFileUpload}
+/>
+<div class="container" style="width:{Math.min(width, maxVisibleWidth)}px;height:{Math.min(height, maxVisibleHeight)}px" bind:this={containerRef}>
   <input type="file" accept="image/*" style="display:none" bind:this={fileInput} onchange={handleFileSelect} />
-  <div class="toolbar">
-    <label>W <input type="number" min="100" bind:value={width} style="width:70px" /></label>
-    <label>H <input type="number" min="100" bind:value={height} style="width:70px" /></label>
-    <label>Ø <input type="number" min="1" bind:value={circleDiameter} style="width:50px" title="Circle Diameter" /></label>
-    <label>Line <input type="number" min="1" bind:value={edgeWidth} style="width:50px" title="Edge Width" /></label>
-    <button onclick={addRootCircle} disabled={mode!=='draw'}>+ Root</button>
-    <button onclick={exportSVG}>Export SVG</button>
-    <label title="Include background in export"><input type="checkbox" bind:checked={exportWithBackground} /> BG</label>
-    <button onclick={toggleMode}>{mode === 'draw' ? 'Customize' : 'Draw'}</button>
-    <button onclick={triggerFileUpload}>Upload BG</button>
-  </div>
 
   <svg
     id="graph-svg"
@@ -446,7 +492,6 @@
   {#if mode==='customize' && (selectedCircle() || selectedEdge())}
     <div
       class="sidepanel"
-      style="position:absolute; top:0; right:0; width:260px; height:100%; background:#f9f9f9; border-left:1px solid #ccc; padding:8px; overflow:auto;"
     >
       <button onclick={() => {selectedCircleId=null; selectedEdgeId=null;}} style="float:right">✕</button>
       {#if selectedCircle()}
