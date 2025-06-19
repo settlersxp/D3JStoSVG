@@ -141,8 +141,11 @@
         newDescription = description.replace('i++', String(nextCircleId));
       }
       
+      // Get a unique ID, starting with nextCircleId
+      const uniqueId = getUniqueId(nextCircleId);
+      
       const root: Circle = {
-        id: nextCircleId,
+        id: uniqueId,
         x: width / 2,
         y: height / 2,
         diameter: circleDiameter,
@@ -155,6 +158,17 @@
       };
       circles = [...circles, root];
       nextCircleId += 1;
+    }
+  });
+
+  // Make sure nextCircleId and nextEdgeId are always greater than any existing IDs
+  $effect(() => {
+    // Only ensure nextEdgeId is greater than existing edge IDs
+    if (edges.length > 0) {
+      const maxEdgeId = Math.max(...edges.map(e => e.id));
+      if (maxEdgeId >= nextEdgeId) {
+        nextEdgeId = maxEdgeId + 1;
+      }
     }
   });
 
@@ -251,6 +265,21 @@
     }
   }
 
+  // Helper function to ensure a unique ID
+  function getUniqueId(preferredId: number): number {
+    // If the ID is not used, return it
+    if (!circles.some(c => c.id === preferredId)) {
+      return preferredId;
+    }
+    
+    // Otherwise find the next available ID
+    let id = preferredId;
+    while (circles.some(c => c.id === id)) {
+      id++;
+    }
+    return id;
+  }
+
   function pointerUp(event: PointerEvent) {
     if (mode !== 'draw') return;
     const svg = event.currentTarget as SVGSVGElement;
@@ -279,9 +308,12 @@
         newDescription = description.replace('i++', String(nextCircleId));
       }
       
+      // Get a unique ID, starting with nextCircleId
+      const uniqueId = getUniqueId(nextCircleId);
+      
       // Create new circle at pointer position
       const newCircle: Circle = {
-        id: nextCircleId,
+        id: uniqueId,
         x: event.offsetX,
         y: event.offsetY,
         diameter: circleDiameter,
@@ -329,8 +361,11 @@
       newDescription = description.replace('i++', String(nextCircleId));
     }
     
+    // Get a unique ID, starting with nextCircleId
+    const uniqueId = getUniqueId(nextCircleId);
+    
     const c: Circle = {
-      id: nextCircleId,
+      id: uniqueId,
       x: width / 2,
       y: height / 2,
       diameter: circleDiameter,
@@ -531,6 +566,7 @@
   title={title}
   description={description}
   textPosition={textPosition}
+  iteratorValue={nextCircleId}
   onUpdate={(property, value) => {
     if (property === 'width') width = value as number;
     else if (property === 'height') height = value as number;
@@ -540,6 +576,7 @@
     else if (property === 'title') title = value as string;
     else if (property === 'description') description = value as string;
     else if (property === 'textPosition') textPosition = value as 'left' | 'right' | 'top' | 'bottom';
+    else if (property === 'iteratorValue') nextCircleId = value as number;
   }}
   onAddRoot={addRootCircle}
   onExport={exportSVG}

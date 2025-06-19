@@ -13,6 +13,7 @@
     title = '',
     description = '',
     textPosition = 'bottom',
+    iteratorValue = 1,
     
     // Callback props instead of event dispatcher
     onUpdate = () => {},
@@ -30,6 +31,7 @@
     title?: string;
     description?: string;
     textPosition?: 'left' | 'right' | 'top' | 'bottom';
+    iteratorValue?: number;
     
     onUpdate?: (property: string, value: number | boolean | string) => void;
     onAddRoot?: () => void;
@@ -66,6 +68,7 @@
   <label title="Include background in export"><input type="checkbox" checked={exportWithBackground} onchange={(e) => onUpdate('exportWithBackground', (e.target as HTMLInputElement).checked)} /> BG</label>
   <button onclick={onToggleMode}>{mode === 'draw' ? 'Customize' : 'Draw'}</button>
   <button onclick={onUploadBg}>Upload BG</button>
+  <label title="Current iterator value for i++ replacement">ID <input type="number" value={iteratorValue} oninput={(e) => onUpdate('iteratorValue', +(e.target as HTMLInputElement).value)} style="width:50px" /></label>
   <div style="width:100%; margin-top:4px; display:flex; gap:4px; align-items:center;">
     <label>Title <input type="text" value={title} oninput={(e) => onUpdate('title', (e.target as HTMLInputElement).value)} style="width:100px" /></label>
     <label>Desc <input type="text" value={description} oninput={(e) => onUpdate('description', (e.target as HTMLInputElement).value)} style="width:100px" /></label>
