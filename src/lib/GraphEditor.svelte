@@ -438,8 +438,8 @@
       {#if selectedCircle()}
         <h3>Circle {selectedCircle()!.id}</h3>
         <button onclick={() => deleteCircle(selectedCircle()!.id)} style="width:100%; margin: 4px 0 12px; padding: 4px; background: #ffdddd; border-color: #ff9999; color: #d8000c; cursor: pointer;">Delete Circle</button>
-        <label>Fill <input type="color" value={selectedCircle()!.fill} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'fill',(e.target as HTMLInputElement).value)}/></label><br />
-        <label>Stroke <input type="color" value={selectedCircle()!.stroke} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'stroke',(e.target as HTMLInputElement).value)}/></label><br />
+        <label>Fill <input type="color" value={selectedCircle()!.fill} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'fill',(e.target as HTMLInputElement).value)} oninput={(e)=>updateCircleField(selectedCircle()!.id,'fill',(e.target as HTMLInputElement).value)} onchange={(e)=>updateCircleField(selectedCircle()!.id,'fill',(e.target as HTMLInputElement).value)}/></label><br />
+        <label>Stroke <input type="color" value={selectedCircle()!.stroke} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'stroke',(e.target as HTMLInputElement).value)} oninput={(e)=>updateCircleField(selectedCircle()!.id,'stroke',(e.target as HTMLInputElement).value)} onchange={(e)=>updateCircleField(selectedCircle()!.id,'stroke',(e.target as HTMLInputElement).value)}/></label><br />
         <label>Diameter <input type="number" min="1" value={selectedCircle()!.diameter} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'diameter',+(e.target as HTMLInputElement).value)}/></label><br />
         <label>Border <input type="number" min="1" value={selectedCircle()!.strokeWidth} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'strokeWidth',+(e.target as HTMLInputElement).value)}/></label>
         <hr />
@@ -458,7 +458,7 @@
       {:else if selectedEdge()}
         <h3>Edge {selectedEdge()!.id}</h3>
         <button onclick={() => deleteEdge(selectedEdge()!.id)} style="width:100%; margin: 4px 0 12px; padding: 4px; background: #ffdddd; border-color: #ff9999; color: #d8000c; cursor: pointer;">Delete Edge</button>
-        <label>Color <input type="color" value={selectedEdge()!.color} onkeyup={(e)=>updateEdgeField(selectedEdge()!.id,'color',(e.target as HTMLInputElement).value)}/></label><br />
+        <label>Color <input type="color" value={selectedEdge()!.color} onkeyup={(e)=>updateEdgeField(selectedEdge()!.id,'color',(e.target as HTMLInputElement).value)} oninput={(e)=>updateEdgeField(selectedEdge()!.id,'color',(e.target as HTMLInputElement).value)} onchange={(e)=>updateEdgeField(selectedEdge()!.id,'color',(e.target as HTMLInputElement).value)}/></label><br />
         <label>Width <input type="number" min="1" value={selectedEdge()!.width} onkeyup={(e)=>updateEdgeField(selectedEdge()!.id,'width',+(e.target as HTMLInputElement).value)}/></label>
         <hr />
         <h4>Custom Attributes</h4>
