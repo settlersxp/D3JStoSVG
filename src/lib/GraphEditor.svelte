@@ -27,6 +27,7 @@
 
   let backgroundImage = $state<string | null>(null);
   let fileInput: HTMLInputElement;
+  let exportWithBackground = $state(false);
 
   /* ---------------------
    * Internal state
@@ -212,8 +213,20 @@
     const svgElement = document.getElementById('graph-svg') as unknown as SVGSVGElement | null;
     if (!svgElement) return;
 
+    // If we're exporting without background, temporarily hide it
+    const bgImage = svgElement.querySelector('image');
+    if (bgImage && !exportWithBackground) {
+      bgImage.style.display = 'none';
+    }
+
     const serializer = new XMLSerializer();
     const source = serializer.serializeToString(svgElement);
+    
+    // Restore background visibility if needed
+    if (bgImage && !exportWithBackground) {
+      bgImage.style.display = '';
+    }
+    
     const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -364,6 +377,7 @@
     <label>Line <input type="number" min="1" bind:value={edgeWidth} style="width:50px" title="Edge Width" /></label>
     <button onclick={addRootCircle} disabled={mode!=='draw'}>+ Root</button>
     <button onclick={exportSVG}>Export SVG</button>
+    <label title="Include background in export"><input type="checkbox" bind:checked={exportWithBackground} /> BG</label>
     <button onclick={toggleMode}>{mode === 'draw' ? 'Customize' : 'Draw'}</button>
     <button onclick={triggerFileUpload}>Upload BG</button>
   </div>
