@@ -474,18 +474,17 @@
   edgeWidth={edgeWidth}
   mode={mode}
   exportWithBackground={exportWithBackground}
-  on:update={(e) => {
-    const { property, value } = e.detail;
-    if (property === 'width') width = value;
-    else if (property === 'height') height = value;
-    else if (property === 'circleDiameter') circleDiameter = value;
-    else if (property === 'edgeWidth') edgeWidth = value;
-    else if (property === 'exportWithBackground') exportWithBackground = value;
+  onUpdate={(property, value) => {
+    if (property === 'width') width = value as number;
+    else if (property === 'height') height = value as number;
+    else if (property === 'circleDiameter') circleDiameter = value as number;
+    else if (property === 'edgeWidth') edgeWidth = value as number;
+    else if (property === 'exportWithBackground') exportWithBackground = value as boolean;
   }}
-  on:addRoot={addRootCircle}
-  on:export={exportSVG}
-  on:toggleMode={toggleMode}
-  on:uploadBg={triggerFileUpload}
+  onAddRoot={addRootCircle}
+  onExport={exportSVG}
+  onToggleMode={toggleMode}
+  onUploadBg={triggerFileUpload}
 />
 <div class="container" style="width:{Math.min(width, maxVisibleWidth)}px;height:{Math.min(height, maxVisibleHeight)}px" bind:this={containerRef}>
   <input type="file" accept="image/*" style="display:none" bind:this={fileInput} onchange={handleFileSelect} />
