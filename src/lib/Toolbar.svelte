@@ -10,6 +10,9 @@
     edgeWidth = 5,
     mode = 'draw',
     exportWithBackground = false,
+    title = '',
+    description = '',
+    textPosition = 'bottom',
     
     // Callback props instead of event dispatcher
     onUpdate = () => {},
@@ -24,8 +27,11 @@
     edgeWidth?: number;
     mode?: 'draw' | 'customize';
     exportWithBackground?: boolean;
+    title?: string;
+    description?: string;
+    textPosition?: 'left' | 'right' | 'top' | 'bottom';
     
-    onUpdate?: (property: string, value: number | boolean) => void;
+    onUpdate?: (property: string, value: number | boolean | string) => void;
     onAddRoot?: () => void;
     onExport?: () => void;
     onToggleMode?: () => void;
@@ -46,6 +52,7 @@
     gap: 4px;
     z-index: 10;
     margin-bottom: 8px;
+    flex-wrap: wrap;
   }
 </style>
 
@@ -59,4 +66,16 @@
   <label title="Include background in export"><input type="checkbox" checked={exportWithBackground} onchange={(e) => onUpdate('exportWithBackground', (e.target as HTMLInputElement).checked)} /> BG</label>
   <button onclick={onToggleMode}>{mode === 'draw' ? 'Customize' : 'Draw'}</button>
   <button onclick={onUploadBg}>Upload BG</button>
+  <div style="width:100%; margin-top:4px; display:flex; gap:4px; align-items:center;">
+    <label>Title <input type="text" value={title} oninput={(e) => onUpdate('title', (e.target as HTMLInputElement).value)} style="width:100px" /></label>
+    <label>Desc <input type="text" value={description} oninput={(e) => onUpdate('description', (e.target as HTMLInputElement).value)} style="width:100px" /></label>
+    <label>Pos 
+      <select value={textPosition} onchange={(e) => onUpdate('textPosition', (e.target as HTMLSelectElement).value)} style="width:80px">
+        <option value="left">Left</option>
+        <option value="right">Right</option>
+        <option value="top">Top</option>
+        <option value="bottom">Bottom</option>
+      </select>
+    </label>
+  </div>
 </div> 

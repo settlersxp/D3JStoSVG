@@ -1,5 +1,6 @@
 <script lang="ts">
   import Toolbar from './Toolbar.svelte';
+  import CircleText from './CircleText.svelte';
 
   import { tick } from 'svelte';
 
@@ -26,6 +27,11 @@
   // Global defaults (can be overridden for every circle / edge)
   let circleDiameter = $state(cdProp);
   let edgeWidth = $state(ewProp);
+  
+  // Text properties for new circles
+  let title = $state('');
+  let description = $state('');
+  let textPosition = $state<'left' | 'right' | 'top' | 'bottom'>('bottom');
 
   let backgroundImage = $state<string | null>(null);
   let fileInput: HTMLInputElement;
@@ -64,6 +70,9 @@
     fill: string;
     stroke: string;
     strokeWidth: number;
+    title?: string;
+    description?: string;
+    textPosition?: 'left' | 'right' | 'top' | 'bottom';
     customAttrs?: CustomAttrs;
   };
 
@@ -120,6 +129,18 @@
    * --------------------- */
   $effect(() => {
     if (circles.length === 0) {
+      // Process title and description for i++ pattern
+      let newTitle = title;
+      let newDescription = description;
+      
+      if (title.includes('i++')) {
+        newTitle = title.replace('i++', String(nextCircleId));
+      }
+      
+      if (description.includes('i++')) {
+        newDescription = description.replace('i++', String(nextCircleId));
+      }
+      
       const root: Circle = {
         id: nextCircleId,
         x: width / 2,
@@ -127,7 +148,10 @@
         diameter: circleDiameter,
         fill: '#4cc9f0',
         stroke: '#1d3557',
-        strokeWidth: edgeWidth
+        strokeWidth: edgeWidth,
+        title: newTitle,
+        description: newDescription,
+        textPosition: textPosition
       };
       circles = [...circles, root];
       nextCircleId += 1;
@@ -243,6 +267,18 @@
     }
 
     if (isCreatingEdge && startCircleId !== null) {
+      // Process title and description for i++ pattern
+      let newTitle = title;
+      let newDescription = description;
+      
+      if (title.includes('i++')) {
+        newTitle = title.replace('i++', String(nextCircleId));
+      }
+      
+      if (description.includes('i++')) {
+        newDescription = description.replace('i++', String(nextCircleId));
+      }
+      
       // Create new circle at pointer position
       const newCircle: Circle = {
         id: nextCircleId,
@@ -251,7 +287,10 @@
         diameter: circleDiameter,
         fill: '#ffbe0b',
         stroke: '#8338ec',
-        strokeWidth: edgeWidth
+        strokeWidth: edgeWidth,
+        title: newTitle,
+        description: newDescription,
+        textPosition: textPosition
       };
       circles = [...circles, newCircle];
       // Create edge
@@ -278,6 +317,18 @@
    * UI helpers
    * --------------------- */
   function addRootCircle() {
+    // Process title and description for i++ pattern
+    let newTitle = title;
+    let newDescription = description;
+    
+    if (title.includes('i++')) {
+      newTitle = title.replace('i++', String(nextCircleId));
+    }
+    
+    if (description.includes('i++')) {
+      newDescription = description.replace('i++', String(nextCircleId));
+    }
+    
     const c: Circle = {
       id: nextCircleId,
       x: width / 2,
@@ -285,7 +336,10 @@
       diameter: circleDiameter,
       fill: '#4cc9f0',
       stroke: '#1d3557',
-      strokeWidth: edgeWidth
+      strokeWidth: edgeWidth,
+      title: newTitle,
+      description: newDescription,
+      textPosition: textPosition
     };
     circles = [...circles, c];
     nextCircleId += 1;
@@ -474,12 +528,18 @@
   edgeWidth={edgeWidth}
   mode={mode}
   exportWithBackground={exportWithBackground}
+  title={title}
+  description={description}
+  textPosition={textPosition}
   onUpdate={(property, value) => {
     if (property === 'width') width = value as number;
     else if (property === 'height') height = value as number;
     else if (property === 'circleDiameter') circleDiameter = value as number;
     else if (property === 'edgeWidth') edgeWidth = value as number;
     else if (property === 'exportWithBackground') exportWithBackground = value as boolean;
+    else if (property === 'title') title = value as string;
+    else if (property === 'description') description = value as string;
+    else if (property === 'textPosition') textPosition = value as 'left' | 'right' | 'top' | 'bottom';
   }}
   onAddRoot={addRootCircle}
   onExport={exportSVG}
@@ -573,6 +633,15 @@
           onclick={() => selectCircle(c.id)}
           {...(c.customAttrs ?? {})}
         />
+        
+        <CircleText 
+          x={c.x}
+          y={c.y}
+          diameter={c.diameter}
+          title={c.title}
+          description={c.description}
+          textPosition={c.textPosition}
+        />
       {/key}
     {/each}
   </svg>
@@ -590,6 +659,20 @@
         <label>Stroke <input type="color" value={selectedCircle()!.stroke} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'stroke',(e.target as HTMLInputElement).value)} oninput={(e)=>updateCircleField(selectedCircle()!.id,'stroke',(e.target as HTMLInputElement).value)} onchange={(e)=>updateCircleField(selectedCircle()!.id,'stroke',(e.target as HTMLInputElement).value)}/></label><br />
         <label>Diameter <input type="number" min="1" value={selectedCircle()!.diameter} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'diameter',+(e.target as HTMLInputElement).value)}/></label><br />
         <label>Border <input type="number" min="1" value={selectedCircle()!.strokeWidth} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'strokeWidth',+(e.target as HTMLInputElement).value)}/></label>
+        
+        <hr />
+        <h4>Text Properties</h4>
+        <label>Title <input type="text" value={selectedCircle()!.title || ''} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'title',(e.target as HTMLInputElement).value)} style="width:100%"/></label><br />
+        <label>Description <input type="text" value={selectedCircle()!.description || ''} onkeyup={(e)=>updateCircleField(selectedCircle()!.id,'description',(e.target as HTMLInputElement).value)} style="width:100%"/></label><br />
+        <label>Position 
+          <select value={selectedCircle()!.textPosition || 'bottom'} onchange={(e)=>updateCircleField(selectedCircle()!.id,'textPosition',(e.target as HTMLSelectElement).value)}>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+          </select>
+        </label>
+        
         <hr />
         <h4>Custom Attributes</h4>
         {#each Object.entries(selectedCircle()!.customAttrs ?? {}) as [k,v] (k)}
